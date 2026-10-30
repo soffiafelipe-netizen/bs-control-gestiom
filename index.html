@@ -214,7 +214,11 @@ function BarPct({pct,color,h}){
   color=color||"#6366f1"; h=h||4;
   return <div style={{background:"#1e293b",borderRadius:99,height:h,overflow:"hidden"}}><div style={{width:Math.round(pct*100)+"%",height:"100%",background:color,borderRadius:99}}/></div>;
 }
-function DaysLeft({date}){
+function DaysLeft({date,estado,tarea}){
+  if(estado==="Completado"){
+    if(tarea===OTRAS)return <span style={{color:"#475569"}}>—</span>;
+    return <span style={{color:"#10b981",fontWeight:700,background:"#10b98118",border:"1px solid #10b98144",borderRadius:4,padding:"1px 6px",whiteSpace:"nowrap"}}>✓ Lista</span>;
+  }
   const d=dd(date);
   if(d===null)return <span style={{color:"#475569"}}>—</span>;
   const color=d<0?"#ef4444":d<7?"#f59e0b":d<14?"#eab308":"#10b981";
@@ -699,7 +703,7 @@ function ViewProyectos({tareas,pros,onEdit,onAddTarea,onDelProyecto}){
                     </div>
                     <div style={{flex:1,minWidth:60}}><BarPct pct={t.pct} color={EC[t.estado]}/></div>
                     <Badge estado={t.estado}/>
-                    <div style={{flex:"0 0 60px",textAlign:"right",fontSize:10}}><DaysLeft date={t.comprometidaDate}/></div>
+                    <div style={{flex:"0 0 60px",textAlign:"right",fontSize:10}}><DaysLeft date={t.comprometidaDate} estado={t.estado} tarea={t.tarea}/></div>
                     <div style={{fontSize:10,color:"#475569",flex:"0 0 70px",textAlign:"right"}}>{t.horasEjec}h/{t.horasProg}h</div>
                   </div>
                 );
@@ -856,7 +860,7 @@ function ViewCarga({tareas}){
             {crit.length>0&&(
               <div style={{background:"#7f1d1d22",border:"1px solid #ef444433",borderRadius:5,padding:7,marginBottom:8}}>
                 <div style={{fontSize:9,color:"#ef4444",fontWeight:700,marginBottom:3}}>⚠ Críticas</div>
-                {crit.map(function(t){return <div key={t.id} style={{fontSize:10,color:"#fca5a5",display:"flex",justifyContent:"space-between"}}><span style={{overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis",maxWidth:"70%"}}>{t.proyecto} — {t.tarea}</span><DaysLeft date={t.comprometidaDate}/></div>;})}
+                {crit.map(function(t){return <div key={t.id} style={{fontSize:10,color:"#fca5a5",display:"flex",justifyContent:"space-between"}}><span style={{overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis",maxWidth:"70%"}}>{t.proyecto} — {t.tarea}</span><DaysLeft date={t.comprometidaDate} estado={t.estado} tarea={t.tarea}/></div>;})}
               </div>
             )}
             {/* Listado tareas por semana */}
@@ -1023,7 +1027,7 @@ function ViewTabla({tareas,onEdit}){
                 <td style={{padding:"8px 10px",minWidth:70}}><BarPct pct={t.pct} color={EC[t.estado]}/></td>
                 <td style={{padding:"8px 10px",color:"#94a3b8",whiteSpace:"nowrap"}}>{t.horasEjec}h/{t.horasProg}h</td>
                 <td style={{padding:"8px 10px",color:"#94a3b8",whiteSpace:"nowrap"}}>{fd(t.comprometidaDate)}</td>
-                <td style={{padding:"8px 10px"}}><DaysLeft date={t.comprometidaDate}/></td>
+                <td style={{padding:"8px 10px"}}><DaysLeft date={t.comprometidaDate} estado={t.estado} tarea={t.tarea}/></td>
                 <td style={{padding:"8px 10px",color:"#64748b",maxWidth:140,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.pendientes||"—"}</td>
               </tr>
             );
