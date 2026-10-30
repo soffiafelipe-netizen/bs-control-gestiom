@@ -171,7 +171,7 @@ function des(tareas){
 }
 
 function saveData(tareas,horas,pros){
-  const body = JSON.stringify({tareas:ser(tareas),horas:horas,pros:pros,mapa:MAPA_IMPORT,ts:new Date().toISOString()});
+  const body = JSON.stringify({tareas:ser(tareas),horas:horas,pros:pros,mapa:MAPA_IMPORT,desde:DESDE_IMPORT,ts:new Date().toISOString()});
   try{localStorage.setItem(SK,body);}catch(e){}
   fetch(SUPA_URL+"/rest/v1/control_gestion?key=eq."+SUPA_ROW,{method:"GET",headers:SUPA_H})
     .then(function(r){return r.json();})
@@ -187,7 +187,7 @@ function saveData(tareas,horas,pros){
 function loadData(){
   try{
     const raw=localStorage.getItem(SK);
-    if(raw){const d=JSON.parse(raw);d.tareas=des(d.tareas);if(d.mapa)MAPA_IMPORT=d.mapa;return d;}
+    if(raw){const d=JSON.parse(raw);d.tareas=des(d.tareas);if(d.mapa)MAPA_IMPORT=d.mapa;if(d.desde)DESDE_IMPORT=d.desde;return d;}
   }catch(e){}
   return null;
 }
@@ -200,6 +200,7 @@ function loadCloudData(onLoaded){
         const d=JSON.parse(rows[0].value);
         d.tareas=des(d.tareas);
         if(d.mapa)MAPA_IMPORT=d.mapa;
+        if(d.desde)DESDE_IMPORT=d.desde;
         onLoaded(d);
       }
     }).catch(function(){});
@@ -1063,6 +1064,9 @@ const ALIAS_SUB = {
   "arq coordinacion especialidades":"arq coordinacion","obra supervision":"obra supervision","arq basica":"arq basica"
 };
 let MAPA_IMPORT = {};   // equivalencias elegidas por el usuario (se guardan en Supabase)
+// Año desde el cual se toman las horas de un proyecto (las anteriores son de una etapa/proyecto previo)
+const DESDE_DEF = {"py condominio aysen":2026};
+let DESDE_IMPORT = {};  // elegido por el usuario (se guarda en Supabase)
 
 function normTxt(s){return String(s==null?"":s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();}
 function normSub(s){const n=normTxt(s);if(!n||n==="0")return "";return ALIAS_SUB[n]||n;}
@@ -1135,8 +1139,18 @@ function autoMapa(proysExcel,pros){
   return out;
 }
 
+function autoDesde(proysExcel){
+  const out={};
+  proysExcel.forEach(function(px){
+    const k=normTxt(px);
+    if(Object.prototype.hasOwnProperty.call(DESDE_IMPORT,k))out[px]=+DESDE_IMPORT[k]||0;
+    else out[px]=DESDE_DEF[k]||0;
+  });
+  return out;
+}
 // Cruza las filas del Excel con las tareas de la app
-function calcularImport(filas,mapa,tareas){
+function calcularImport(filas,mapa,tareas,desde){
+  desde=desde||{};
   const tPorProy={};
   tareas.forEach(function(t){
     if(t.tarea===OTRAS||t.tarea==="— Sin tareas —")return;
@@ -1144,7 +1158,10 @@ function calcularImport(filas,mapa,tareas){
   });
   const dest={};   // clave -> {proyecto, tareaId|null, reales, subs, total}
   const sinVinculo={};let hTareas=0,hOtras=0,hSin=0;
+  let hExcl=0;
   filas.forEach(function(f){
+    const dy=+desde[f.proy]||0;
+    if(dy&&+f.mes.slice(0,4)<dy){hExcl+=f.h;return;}
     const p=mapa[f.proy];
     if(!p){sinVinculo[f.proy]=(sinVinculo[f.proy]||0)+f.h;hSin+=f.h;return;}
     const ns=normSub(f.sub);
@@ -1158,7 +1175,7 @@ function calcularImport(filas,mapa,tareas){
     d.total+=f.h;
     if(t)hTareas+=f.h;else hOtras+=f.h;
   });
-  return {dest:dest,sinVinculo:sinVinculo,hTareas:r1(hTareas),hOtras:r1(hOtras),hSin:r1(hSin)};
+  return {dest:dest,sinVinculo:sinVinculo,hTareas:r1(hTareas),hOtras:r1(hOtras),hSin:r1(hSin),hExcl:r1(hExcl)};
 }
 
 function aplicarImportacion(prev,res){
@@ -1240,6 +1257,7 @@ function ModalImportar({tareas,pros,onApply,onClose}){
   const [err,setErr]=useState("");
   const [datos,setDatos]=useState(null);      // {filas, omitidas, nombre}
   const [mapa,setMapa]=useState({});
+  const [desde,setDesde]=useState({});
   const [abierto,setAbierto]=useState(null);
   const [resumenFinal,setResumenFinal]=useState(null);
 
@@ -1253,6 +1271,7 @@ function ModalImportar({tareas,pros,onApply,onClose}){
         if(!r.filas.length)throw new Error("La hoja Base no tiene filas con horas.");
         const proys=[...new Set(r.filas.map(function(f){return f.proy;}))];
         setMapa(autoMapa(proys,pros));
+        setDesde(autoDesde(proys));
         setDatos({filas:r.filas,omitidas:r.omitidas,nombre:file.name});
         setPaso("revisar");
       });
@@ -1266,7 +1285,7 @@ function ModalImportar({tareas,pros,onApply,onClose}){
     return Object.values(m).sort(function(a,b){return (mapa[b.p]?1:0)-(mapa[a.p]?1:0)||b.fin.localeCompare(a.fin)||b.h-a.h;});
   },[datos,mapa]);
 
-  const res=useMemo(function(){return datos?calcularImport(datos.filas,mapa,tareas):null;},[datos,mapa,tareas]);
+  const res=useMemo(function(){return datos?calcularImport(datos.filas,mapa,tareas,desde):null;},[datos,mapa,tareas,desde]);
 
   const porProyecto=useMemo(function(){
     if(!res)return {};
@@ -1279,6 +1298,9 @@ function ModalImportar({tareas,pros,onApply,onClose}){
   function aplicar(){
     const nuevoMapa=Object.assign({},MAPA_IMPORT);
     Object.keys(mapa).forEach(function(px){nuevoMapa[normTxt(px)]=mapa[px]||"";});
+    const nuevoDesde=Object.assign({},DESDE_IMPORT);
+    Object.keys(desde).forEach(function(px){nuevoDesde[normTxt(px)]=+desde[px]||0;});
+    DESDE_IMPORT=nuevoDesde;
     onApply(res,nuevoMapa);
     setResumenFinal({tareas:Object.values(res.dest).filter(function(d){return d.tareaId!==null;}).length,otras:Object.values(res.dest).filter(function(d){return d.tareaId===null;}).length,h:res.hTareas+res.hOtras});
     setPaso("listo");
@@ -1311,19 +1333,24 @@ function ModalImportar({tareas,pros,onApply,onClose}){
             {kpi("Horas a tareas",res.hTareas+"h","#10b981")}
             {kpi("Horas a "+OTRAS,res.hOtras+"h","#f59e0b")}
             {kpi("Proyectos sin vincular",res.hSin+"h","#64748b")}
+            {res.hExcl>0&&kpi("Excluidas por fecha",res.hExcl+"h","#64748b")}
           </div>
 
           <div style={card}>
             <div style={{fontSize:9,color:"#64748b",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>1 · Equivalencia de proyectos (Excel → App)</div>
-            <div style={{fontSize:10,color:"#475569",marginBottom:8}}>Revisa que cada proyecto del Excel apunte al proyecto correcto de la app. Los que queden en "— No importar —" no se cargan (ej. Gestión, Estudios, Vacaciones).</div>
+            <div style={{fontSize:10,color:"#475569",marginBottom:8}}>Revisa que cada proyecto del Excel apunte al proyecto correcto de la app. Los que queden en "— No importar —" no se cargan (ej. Gestión, Estudios, Vacaciones). Con "Desde" puedes tomar solo las horas a partir de un año (cuando las anteriores son de un proyecto o etapa previa).</div>
             <div style={{display:"grid",gap:4}}>
               {proysExcel.map(function(x){
                 const v=mapa[x.p]||"";
                 return (
-                  <div key={x.p} style={{display:"grid",gridTemplateColumns:"minmax(0,1.3fr) 70px 110px minmax(0,1fr)",gap:6,alignItems:"center",fontSize:11,opacity:v?1:0.6}}>
+                  <div key={x.p} style={{display:"grid",gridTemplateColumns:"minmax(0,1.3fr) 64px 104px 96px minmax(0,1fr)",gap:6,alignItems:"center",fontSize:11,opacity:v?1:0.6}}>
                     <span style={{color:"#e2e8f0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={x.p}>{x.p}</span>
                     <span style={{color:"#94a3b8",textAlign:"right"}}>{Math.round(x.h)}h</span>
                     <span style={{color:"#475569",fontSize:10,textAlign:"center"}}>{mesLabel(x.ini)} → {mesLabel(x.fin)}</span>
+                    <select value={desde[x.p]||0} title="Tomar horas desde este año" onChange={function(e){const val=+e.target.value;setDesde(function(p){return Object.assign({},p,{[x.p]:val});});}} style={Object.assign({},INP,{padding:"4px 4px",fontSize:10,color:desde[x.p]?"#f59e0b":"#64748b"})}>
+                      <option value={0}>Todo</option>
+                      {(function(){const a=[];for(let y=+x.ini.slice(0,4)+1;y<=+x.fin.slice(0,4);y++)a.push(y);return a;})().map(function(y){return <option key={y} value={y}>Desde {y}</option>;})}
+                    </select>
                     <select value={v} onChange={function(e){const val=e.target.value;setMapa(function(p){return Object.assign({},p,{[x.p]:val});});}} style={Object.assign({},INP,{padding:"4px 6px",fontSize:11,color:v?"#10b981":"#64748b"})}>
                       <option value="">— No importar —</option>
                       {[...pros].sort().map(function(p){return <option key={p} value={p}>{p}</option>;})}
@@ -1408,7 +1435,7 @@ function App(){
         if(d.horas)setHoras(d.horas);
         setTareasRaw(d.tareas);
         setStorageSource("cloud");
-        try{localStorage.setItem(SK,JSON.stringify({tareas:ser(d.tareas),horas:d.horas,pros:d.pros,mapa:MAPA_IMPORT,ts:d.ts}));}catch(e){}
+        try{localStorage.setItem(SK,JSON.stringify({tareas:ser(d.tareas),horas:d.horas,pros:d.pros,mapa:MAPA_IMPORT,desde:DESDE_IMPORT,ts:d.ts}));}catch(e){}
       }
     });
     return function(){window.removeEventListener("resize",fn);};
@@ -1452,7 +1479,7 @@ function App(){
       .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
       .then(function(rows){
         if(rows&&rows.length>0&&rows[0].value){
-          const d=JSON.parse(rows[0].value);d.tareas=des(d.tareas);if(d.mapa)MAPA_IMPORT=d.mapa;
+          const d=JSON.parse(rows[0].value);d.tareas=des(d.tareas);if(d.mapa)MAPA_IMPORT=d.mapa;if(d.desde)DESDE_IMPORT=d.desde;
           if(d.pros)setPros(d.pros);if(d.horas)setHoras(d.horas);setTareasRaw(d.tareas);
           setStorageSource("cloud");setSyncMsg("✓ Sincronizado desde Supabase");
         } else {saveData(tareas,horas,pros);setSyncMsg("✓ Datos subidos a Supabase");}
