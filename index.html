@@ -23,8 +23,8 @@
   <script type="text/babel">
 const { useState, useMemo, useEffect } = React;
 
-const ARQUITECTOS = [];   // se completa con los datos de Supabase al iniciar sesión
-const HORAS_DEF = {};
+const ARQUITECTOS = ["Felipe Soffia","Fernanda Jimenez","Juan Pablo Badia","Marco Aguirre","Nicole Trepiana","Oscar Leiva","Valeria Carbonell","Victor Venegas"];
+const HORAS_DEF = {"Felipe Soffia":41,"Fernanda Jimenez":41,"Juan Pablo Badia":41,"Marco Aguirre":41,"Oscar Leiva":41,"Victor Venegas":41,"Valeria Carbonell":33,"Nicole Trepiana":33};
 const ESTADOS = ["Pendiente Inicio","Iniciado","En Progreso","Avanzado","Casi Terminado","Completado"];
 const EC = {"Pendiente Inicio":"#64748b","Iniciado":"#3b82f6","En Progreso":"#f59e0b","Avanzado":"#8b5cf6","Casi Terminado":"#10b981","Completado":"#059669"};
 const EP = {"Pendiente Inicio":0,"Iniciado":0.15,"En Progreso":0.38,"Avanzado":0.67,"Casi Terminado":0.88,"Completado":1};
@@ -60,9 +60,77 @@ function getSemanas4() {
   });
 }
 
-const RAW = [];   // sin datos en el código: todo vive en Supabase
+const RAW = [
+  {id:1,m:"Inmobiliaria Security",p:"SECURITY LO MATTA",j:"Felipe Soffia",t:"DOM RF",e:"Nicole Trepiana",s:"Pendiente Inicio",hp:60,he:0,i:46174,pl:30,c:46204,pe:"Actualizar planos As-Built"},
+  {id:2,m:"Inmobiliaria Security",p:"SECURITY LO MATTA",j:"Felipe Soffia",t:"DOM Copropiedad",e:"Nicole Trepiana",s:"Casi Terminado",hp:60,he:50,i:46083,pl:60,c:46143,pe:""},
+  {id:3,m:"Inmobiliaria Security",p:"SECURITY LO MATTA",j:"Felipe Soffia",t:"OBRA Supervisión",e:"Felipe Soffia",s:"Casi Terminado",hp:350,he:300,i:45536,pl:700,c:46236,pe:""},
+  {id:4,m:"Inmobiliaria PY",p:"PY AYSEN",j:"Valeria Carbonell",t:"DOM MP",e:"Valeria Carbonell",s:"Avanzado",hp:140,he:100,i:46097,pl:45,c:46142,pe:""},
+  {id:5,m:"Inmobiliaria PY",p:"PY AYSEN",j:"Valeria Carbonell",t:"ARQ Ventas",e:"Valeria Carbonell",s:"Pendiente Inicio",hp:70,he:0,i:46160,pl:14,c:46174,pe:""},
+  {id:6,m:"Inmobiliaria PY",p:"PY AYSEN",j:"Valeria Carbonell",t:"ARQ Detalles",e:"Victor Venegas",s:"Pendiente Inicio",hp:300,he:0,i:46143,pl:90,c:46233,pe:""},
+  {id:7,m:"Inmobiliaria PY",p:"PY AYSEN",j:"Valeria Carbonell",t:"ARQ Coordinación",e:"Valeria Carbonell",s:"Pendiente Inicio",hp:120,he:0,i:46132,pl:90,c:46222,pe:""},
+  {id:8,m:"Inmobiliaria PY",p:"PY AYSEN",j:"Valeria Carbonell",t:"ARQ EETT",e:"Felipe Soffia",s:"Pendiente Inicio",hp:30,he:0,i:46204,pl:14,c:46218,pe:""},
+  {id:9,m:"Inmobiliaria EI",p:"EI STA ROSA",j:"Oscar Leiva",t:"DOM MP",e:"Oscar Leiva",s:"Casi Terminado",hp:120,he:100,i:46082,pl:90,c:46172,pe:""},
+  {id:10,m:"Inmobiliaria EI",p:"EI STA ROSA",j:"Oscar Leiva",t:"ARQ Detalles",e:"Oscar Leiva",s:"Pendiente Inicio",hp:551,he:0,i:46126,pl:90,c:46216,pe:""},
+  {id:11,m:"Inmobiliaria EI",p:"EI STA ROSA",j:"Oscar Leiva",t:"ARQ Coordinación",e:"Oscar Leiva",s:"Avanzado",hp:150,he:100,i:46082,pl:60,c:46142,pe:""},
+  {id:12,m:"Inmobiliaria EI",p:"EI STA ROSA",j:"Oscar Leiva",t:"ARQ EETT",e:"Felipe Soffia",s:"Iniciado",hp:30,he:2,i:46125,pl:30,c:46155,pe:""},
+  {id:13,m:"Inmobiliaria Security",p:"SECURITY VDG",j:"Marco Aguirre",t:"ARQ Coordinación",e:"Marco Aguirre",s:"Avanzado",hp:120,he:100,i:46083,pl:60,c:46143,pe:""},
+  {id:14,m:"Inmobiliaria Security",p:"SECURITY VDG",j:"Marco Aguirre",t:"OBRA RDI",e:"Marco Aguirre",s:"Pendiente Inicio",hp:120,he:0,i:46266,pl:600,c:46866,pe:""},
+  {id:15,m:"Inmobiliaria Security",p:"SECURITY VDG",j:"Marco Aguirre",t:"DOM MP",e:"Marco Aguirre",s:"Completado",hp:90,he:90,i:46024,pl:120,c:46144,pe:""},
+  {id:16,m:"Inmobiliaria Security",p:"SECURITY O2",j:"Felipe Soffia",t:"OBRA RDI",e:"Victor Venegas",s:"Avanzado",hp:30,he:15,i:46120,pl:90,c:46210,pe:"Detalle cielos / Local Comercial"},
+  {id:17,m:"Inmobiliaria Security",p:"SECURITY O2",j:"Felipe Soffia",t:"OBRA Supervisión",e:"Felipe Soffia",s:"Avanzado",hp:400,he:250,i:45717,pl:700,c:46417,pe:""},
+  {id:18,m:"Inmobiliaria Security",p:"SECURITY O2",j:"Felipe Soffia",t:"DOM Copropiedad",e:"Nicole Trepiana",s:"Avanzado",hp:30,he:15,i:46082,pl:90,c:46172,pe:""},
+  {id:19,m:"Inmobiliaria Security",p:"SECURITY O2",j:"Felipe Soffia",t:"DOM RF",e:"Nicole Trepiana",s:"Pendiente Inicio",hp:30,he:0,i:46389,pl:15,c:46404,pe:""},
+  {id:20,m:"Inmobiliaria PY",p:"PY LOS TOROS",j:"Valeria Carbonell",t:"ARQ Básica",e:"Marco Aguirre",s:"Casi Terminado",hp:200,he:180,i:46023,pl:180,c:46203,pe:""},
+  {id:21,m:"Inmobiliaria PY",p:"PY LOS TOROS",j:"Valeria Carbonell",t:"ARQ Coordinación",e:"Marco Aguirre",s:"Iniciado",hp:120,he:10,i:46082,pl:180,c:46262,pe:""},
+  {id:22,m:"Inmobiliaria PY",p:"PY LOS TOROS",j:"Valeria Carbonell",t:"DOM MP",e:"Marco Aguirre",s:"Pendiente Inicio",hp:120,he:0,i:46143,pl:60,c:46203,pe:""},
+  {id:23,m:"Inmobiliaria PY",p:"PY LOS TOROS",j:"Valeria Carbonell",t:"ARQ Detalles",e:"Marco Aguirre",s:"Pendiente Inicio",hp:300,he:0,i:46174,pl:180,c:46354,pe:""},
+  {id:24,m:"Inmobiliaria PY",p:"PY LOS TOROS",j:"Valeria Carbonell",t:"ARQ EETT",e:"Felipe Soffia",s:"Pendiente Inicio",hp:30,he:0,i:46204,pl:30,c:46234,pe:""},
+  {id:25,m:"Romeo y Julieta",p:"ELISEO E-KARTS",j:"Marco Aguirre",t:"OBRA Supervisión",e:"Felipe Soffia",s:"En Progreso",hp:90,he:30,i:46082,pl:150,c:46232,pe:""},
+  {id:26,m:"Romeo y Julieta",p:"ELISEO E-KARTS",j:"Marco Aguirre",t:"DOM RF",e:"Marco Aguirre",s:"Pendiente Inicio",hp:30,he:0,i:46204,pl:15,c:46219,pe:""},
+  {id:27,m:"Romeo y Julieta",p:"ELISEO E-KARTS",j:"Marco Aguirre",t:"OBRA RDI",e:"Marco Aguirre",s:"Pendiente Inicio",hp:90,he:0,i:46121,pl:90,c:46211,pe:""},
+  {id:28,m:"I Costa Sur",p:"ICOSTA SUR ORELLA",j:"Nicole Trepiana",t:"DOM AP",e:"Nicole Trepiana",s:"Casi Terminado",hp:120,he:100,i:46082,pl:180,c:46262,pe:""},
+  {id:29,m:"I Costa Sur",p:"ICOSTA SUR ORELLA",j:"Nicole Trepiana",t:"ARQ Básica",e:"Nicole Trepiana",s:"Pendiente Inicio",hp:200,he:0,i:46113,pl:60,c:46173,pe:""},
+  {id:30,m:"I Costa Sur",p:"ICOSTA SUR ORELLA",j:"Nicole Trepiana",t:"ARQ Coordinación",e:"Nicole Trepiana",s:"Pendiente Inicio",hp:120,he:0,i:46143,pl:90,c:46233,pe:""},
+  {id:31,m:"I Costa Sur",p:"ICOSTA SUR ORELLA",j:"Nicole Trepiana",t:"DOM PE",e:"Nicole Trepiana",s:"Pendiente Inicio",hp:180,he:0,i:46266,pl:180,c:46446,pe:""},
+  {id:32,m:"Ssilva Desarrollos",p:"SSILVA BARLOVENTO",j:"Juan Pablo Badia",t:"OBRA RDI",e:"Marco Aguirre",s:"Iniciado",hp:120,he:20,i:46082,pl:300,c:46382,pe:""},
+  {id:33,m:"Ssilva Desarrollos",p:"SSILVA BARLOVENTO",j:"Juan Pablo Badia",t:"OBRA Supervisión",e:"Juan Pablo Badia",s:"En Progreso",hp:400,he:135,i:45901,pl:700,c:46601,pe:""},
+  {id:34,m:"Ssilva Desarrollos",p:"SSILVA BARLOVENTO",j:"Juan Pablo Badia",t:"DOM MP",e:"Marco Aguirre",s:"Pendiente Inicio",hp:120,he:0,i:46174,pl:90,c:46264,pe:""},
+  {id:35,m:"Ssilva Desarrollos",p:"SSILVA BARLOVENTO",j:"Juan Pablo Badia",t:"DOM Copropiedad",e:"Nicole Trepiana",s:"En Progreso",hp:30,he:10,i:46113,pl:60,c:46173,pe:""},
+  {id:36,m:"Ssilva Desarrollos",p:"SSILVA BARLOVENTO",j:"Juan Pablo Badia",t:"DOM RF",e:"Marco Aguirre",s:"Pendiente Inicio",hp:60,he:0,i:46296,pl:30,c:46326,pe:""},
+  {id:37,m:"Ssilva Desarrollos",p:"SSILVA CHICUREO",j:"Juan Pablo Badia",t:"DOM MP",e:"Nicole Trepiana",s:"Pendiente Inicio",hp:1,he:0,i:46171,pl:1,c:46172,pe:""},
+  {id:38,m:"Ssilva Desarrollos",p:"SSILVA CHICUREO",j:"Juan Pablo Badia",t:"DOM TEP",e:"Nicole Trepiana",s:"Pendiente Inicio",hp:1,he:0,i:46172,pl:1,c:46173,pe:""},
+  {id:39,m:"Ssilva Desarrollos",p:"SSILVA CHICUREO",j:"Juan Pablo Badia",t:"OBRA RDI",e:"Nicole Trepiana",s:"Pendiente Inicio",hp:1,he:0,i:46173,pl:1,c:46174,pe:""},
+  {id:40,m:"Ssilva Desarrollos",p:"SSILVA CHICUREO",j:"Juan Pablo Badia",t:"OBRA Supervisión",e:"Juan Pablo Badia",s:"Pendiente Inicio",hp:300,he:0,i:46174,pl:700,c:46874,pe:""},
+  {id:41,m:"Inmobiliaria ICICLOS",p:"ICICLOS LOS SUSPIROS",j:"Fernanda Jimenez",t:"ARQ Básica",e:"Fernanda Jimenez",s:"Iniciado",hp:200,he:5,i:46023,pl:180,c:46203,pe:""},
+  {id:42,m:"Inmobiliaria ICICLOS",p:"ICICLOS LOS SUSPIROS",j:"Fernanda Jimenez",t:"ARQ Coordinación",e:"Fernanda Jimenez",s:"Iniciado",hp:120,he:5,i:46082,pl:180,c:46262,pe:""},
+  {id:43,m:"Inmobiliaria ICICLOS",p:"ICICLOS LOS SUSPIROS",j:"Fernanda Jimenez",t:"DOM MP",e:"Fernanda Jimenez",s:"Pendiente Inicio",hp:120,he:0,i:46143,pl:60,c:46203,pe:""},
+  {id:44,m:"Inmobiliaria ICICLOS",p:"ICICLOS LOS SUSPIROS",j:"Fernanda Jimenez",t:"ARQ Detalles",e:"Fernanda Jimenez",s:"Pendiente Inicio",hp:300,he:0,i:46174,pl:180,c:46354,pe:""},
+  {id:45,m:"Inmobiliaria ICICLOS",p:"ICICLOS LOS SUSPIROS",j:"Juan Pablo Badia",t:"ARQ EETT",e:"Juan Pablo Badia",s:"Pendiente Inicio",hp:30,he:0,i:46204,pl:30,c:46234,pe:""},
+  {id:46,m:"Inmobiliaria PY",p:"PY QUINTA LINDEROS 3A",j:"Fernanda Jimenez",t:"DOM RF",e:"Fernanda Jimenez",s:"Pendiente Inicio",hp:40,he:0,i:46173,pl:30,c:46203,pe:""},
+  {id:47,m:"Inmobiliaria PY",p:"PY QUINTA LINDEROS 3A",j:"Fernanda Jimenez",t:"OBRA Supervisión",e:"Juan Pablo Badia",s:"Iniciado",hp:40,he:0,i:46156,pl:180,c:46336,pe:""},
+  {id:48,m:"Inmobiliaria PY",p:"PY QUINTA LINDEROS 3B",j:"Fernanda Jimenez",t:"DOM MP",e:"Fernanda Jimenez",s:"Pendiente Inicio",hp:40,he:0,i:46173,pl:30,c:46203,pe:""},
+  {id:49,m:"Inmobiliaria PY",p:"PY QUINTA LINDEROS 3B",j:"Fernanda Jimenez",t:"ARQ Venta",e:"Fernanda Jimenez",s:"Pendiente Inicio",hp:40,he:0,i:46173,pl:30,c:46205,pe:""},
+  {id:50,m:"Inmobiliaria PY",p:"PY QUINTA LINDEROS 3B",j:"Fernanda Jimenez",t:"OBRA RDI",e:"Fernanda Jimenez",s:"Pendiente Inicio",hp:40,he:0,i:46173,pl:150,c:46323,pe:""},
+  {id:51,m:"Inmobiliaria PY",p:"PY QUINTA LINDEROS 3B",j:"Fernanda Jimenez",t:"OBRA Supervisión",e:"Juan Pablo Badia",s:"Pendiente Inicio",hp:40,he:0,i:46173,pl:150,c:46323,pe:""},
+  {id:52,m:"Inmobiliaria PY",p:"PY QUINTA LINDEROS L2",j:"Fernanda Jimenez",t:"DOM MP",e:"Fernanda Jimenez",s:"Pendiente Inicio",hp:40,he:0,i:46173,pl:30,c:46203,pe:""},
+  {id:53,m:"Inmobiliaria PY",p:"PY RUKAN C5",j:"Fernanda Jimenez",t:"ARQ Cabida",e:"Fernanda Jimenez",s:"Pendiente Inicio",hp:40,he:0,i:46156,pl:30,c:46186,pe:""},
+];
 
-const COLABS = {};
+const COLABS = {
+  1:[{arq:"Felipe Soffia",pct:20}],
+  4:[{arq:"Marco Aguirre",pct:20},{arq:"Felipe Soffia",pct:5}],
+  6:[{arq:"Felipe Soffia",pct:10}],
+  7:[{arq:"Felipe Soffia",pct:10}],
+  10:[{arq:"Felipe Soffia",pct:5}],
+  13:[{arq:"Felipe Soffia",pct:10}],
+  14:[{arq:"Felipe Soffia",pct:10}],
+  15:[{arq:"Felipe Soffia",pct:10}],
+  16:[{arq:"Felipe Soffia",pct:10}],
+  18:[{arq:"Felipe Soffia",pct:10}],
+  19:[{arq:"Felipe Soffia",pct:10}],
+  20:[{arq:"Felipe Soffia",pct:10}],
+  21:[{arq:"Felipe Soffia",pct:10}],
+};
 
 const INIT_TAREAS = RAW.map(function(r){
   return {
@@ -78,35 +146,9 @@ const INIT_TAREAS = RAW.map(function(r){
 const INIT_PROS = [...new Set(INIT_TAREAS.map(function(t){return t.proyecto;}))];
 
 // Storage — Supabase + localStorage fallback
-// Proyecto Supabase de la oficina (cuenta nueva) — datos protegidos con inicio de sesión
-const SUPA_URL = "https://xfwiqhyoiebxdisrpdrq.supabase.co";
-const SUPA_KEY = "sb_publishable_1vIfVtZRqAFVhXJ4UuHZgQ_G4U76cjW";
-// Proyecto anterior (solo para traspasar los datos una vez)
-const OLD_URL = "https://jhbhhyeysrprvvurylgv.supabase.co";
-const OLD_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoYmhoeWV5c3JwcnZ2dXJ5bGd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mzc3MDEsImV4cCI6MjA5NTMxMzcwMX0.t-Butq0BzSoy1OVIqox_WON55SW5eddcdswFBorPEHE";
-const OLD_H = {"Content-Type":"application/json","apikey":OLD_KEY,"Authorization":"Bearer "+OLD_KEY};
-// Copia los datos del proyecto anterior al nuevo (una sola vez)
-function traspasarDatos(){
-  return fetch(OLD_URL+"/rest/v1/control_gestion?key=eq."+SUPA_ROW+"&select=value",{headers:OLD_H})
-    .then(function(r){if(!r.ok)throw new Error("No se pudo leer el sistema anterior ("+r.status+").");return r.json();})
-    .then(function(rows){
-      if(!rows||!rows.length||!rows[0].value)throw new Error("El sistema anterior no tiene datos.");
-      const v=typeof rows[0].value==="string"?rows[0].value:JSON.stringify(rows[0].value);
-      const d=JSON.parse(v);
-      if(!d.tareas||!d.tareas.length)throw new Error("El sistema anterior no tiene tareas.");
-      return supaFetch("/rest/v1/control_gestion",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify({key:SUPA_ROW,value:v})})
-        .then(function(r){
-          if(!r.ok)return r.text().then(function(t){throw new Error("No se pudo guardar en el sistema nuevo ("+r.status+"). "+t.slice(0,140));});
-          return d.tareas.length;
-        });
-    });
-}
-// Vacía los datos del proyecto anterior (para que nadie pueda leerlos por esa vía)
-function vaciarAnterior(){
-  return fetch(OLD_URL+"/rest/v1/control_gestion?key=eq."+SUPA_ROW,{method:"PATCH",headers:Object.assign({"Prefer":"return=minimal"},OLD_H),
-    body:JSON.stringify({value:JSON.stringify({tareas:[],pros:[],horas:{},movido:"Datos trasladados al sistema nuevo",ts:new Date().toISOString()})})})
-    .then(function(r){if(!r.ok)throw new Error("No se pudo vaciar ("+r.status+").");return true;});
-}
+const SUPA_URL = "https://jhbhhyeysrprvvurylgv.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoYmhoeWV5c3JwcnZ2dXJ5bGd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mzc3MDEsImV4cCI6MjA5NTMxMzcwMX0.t-Butq0BzSoy1OVIqox_WON55SW5eddcdswFBorPEHE";
+const SUPA_H = {"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY};
 const SUPA_ROW = "bs_control_v1";
 
 function ser(tareas){
@@ -128,94 +170,40 @@ function des(tareas){
   });
 }
 
-// ---------- Sesión (Supabase Auth) ----------
-const AUTH_K = "bs_auth_v1";
-let SESSION = null;
-function leerSesion(){try{const r=localStorage.getItem(AUTH_K);return r?JSON.parse(r):null;}catch(e){return null;}}
-function guardarSesion(x){SESSION=x;try{if(x)localStorage.setItem(AUTH_K,JSON.stringify(x));else localStorage.removeItem(AUTH_K);}catch(e){}}
-function traducirError(m){
-  m=String(m||"");
-  if(/invalid login credentials/i.test(m))return "Email o contraseña incorrectos.";
-  if(/email not confirmed/i.test(m))return "El usuario no está confirmado. En Supabase marca 'Auto Confirm User' al crearlo.";
-  if(/failed to fetch|network/i.test(m))return "No hay conexión con el servidor. Revisa tu internet.";
-  return m;
-}
-function authPost(grant,body){
-  return fetch(SUPA_URL+"/auth/v1/token?grant_type="+grant,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPA_KEY},body:JSON.stringify(body)})
-    .then(function(r){return r.json().then(function(j){
-      if(!r.ok)throw new Error(j.error_description||j.msg||j.message||("Error "+r.status));
-      return {access_token:j.access_token,refresh_token:j.refresh_token,expires_at:Date.now()+(j.expires_in||3600)*1000,email:(j.user&&j.user.email)||""};
-    });});
-}
-function iniciarSesion(email,pass){return authPost("password",{email:email.trim(),password:pass}).then(function(x){guardarSesion(x);return x;});}
-let refrescando=null;
-function tokenVigente(){
-  if(!SESSION)return Promise.reject(new Error("Sesión cerrada"));
-  if(SESSION.expires_at-Date.now()>60000)return Promise.resolve(SESSION.access_token);
-  if(!refrescando){
-    const email=SESSION.email;
-    refrescando=authPost("refresh_token",{refresh_token:SESSION.refresh_token})
-      .then(function(x){if(!x.email)x.email=email;guardarSesion(x);refrescando=null;return x.access_token;})
-      .catch(function(e){refrescando=null;guardarSesion(null);window.dispatchEvent(new Event("bs-logout"));throw e;});
-  }
-  return refrescando;
-}
-function supaFetch(path,opts){
-  opts=opts||{};
-  return tokenVigente().then(function(tok){
-    return fetch(SUPA_URL+path,Object.assign({},opts,{headers:Object.assign({"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+tok},opts.headers||{})}));
-  });
-}
-function cerrarSesion(){
-  const x=SESSION;guardarSesion(null);
-  if(x)fetch(SUPA_URL+"/auth/v1/logout",{method:"POST",headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+x.access_token}}).catch(function(){});
-  try{localStorage.removeItem(SK);}catch(e){}
-  window.dispatchEvent(new Event("bs-logout"));
-}
-function fijarArquitectos(d){
-  let a=Object.keys(d.horas||{});
-  if(!a.length){
-    const m={};
-    (d.tareas||[]).forEach(function(t){[t.encargado,t.jefe].concat((t.colaboradores||[]).map(function(c){return c.arq;})).forEach(function(x){if(x)m[x]=1;});});
-    a=Object.keys(m);
-  }
-  a.sort();
-  ARQUITECTOS.length=0;a.forEach(function(x){ARQUITECTOS.push(x);});
-  if(!d.horas||!Object.keys(d.horas).length){d.horas={};a.forEach(function(x){d.horas[x]=41;});}
-}
-
 function saveData(tareas,horas,pros){
   const body = JSON.stringify({tareas:ser(tareas),horas:horas,pros:pros,mapa:MAPA_IMPORT,desde:DESDE_IMPORT,ts:new Date().toISOString()});
-  const q="/rest/v1/control_gestion?key=eq."+SUPA_ROW;
-  return supaFetch(q+"&select=key")
-    .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
+  try{localStorage.setItem(SK,body);}catch(e){}
+  fetch(SUPA_URL+"/rest/v1/control_gestion?key=eq."+SUPA_ROW,{method:"GET",headers:SUPA_H})
+    .then(function(r){return r.json();})
     .then(function(rows){
-      if(rows&&rows.length>0)return supaFetch(q,{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify({value:body})});
-      return supaFetch("/rest/v1/control_gestion",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify({key:SUPA_ROW,value:body})});
-    })
-    .then(function(r){return r.ok;})
-    .catch(function(){return false;});
+      if(rows&&rows.length>0){
+        fetch(SUPA_URL+"/rest/v1/control_gestion?key=eq."+SUPA_ROW,{method:"PATCH",headers:Object.assign({"Prefer":"return=minimal"},SUPA_H),body:JSON.stringify({value:body})}).catch(function(){});
+      } else {
+        fetch(SUPA_URL+"/rest/v1/control_gestion",{method:"POST",headers:Object.assign({"Prefer":"return=minimal"},SUPA_H),body:JSON.stringify({key:SUPA_ROW,value:body})}).catch(function(){});
+      }
+    }).catch(function(){});
 }
 
-function cargarNube(){
-  return supaFetch("/rest/v1/control_gestion?key=eq."+SUPA_ROW+"&select=value")
-    .then(function(r){
-      if(r.status===401||r.status===403)throw new Error("Tu usuario no tiene permiso para leer los datos.");
-      if(!r.ok)throw new Error("Error del servidor ("+r.status+").");
-      return r.json();
-    })
+function loadData(){
+  try{
+    const raw=localStorage.getItem(SK);
+    if(raw){const d=JSON.parse(raw);d.tareas=des(d.tareas);if(d.mapa)MAPA_IMPORT=d.mapa;if(d.desde)DESDE_IMPORT=d.desde;return d;}
+  }catch(e){}
+  return null;
+}
+
+function loadCloudData(onLoaded){
+  fetch(SUPA_URL+"/rest/v1/control_gestion?key=eq."+SUPA_ROW+"&select=value",{headers:SUPA_H})
+    .then(function(r){return r.json();})
     .then(function(rows){
       if(rows&&rows.length>0&&rows[0].value){
         const d=JSON.parse(rows[0].value);
-        d.tareas=des(d.tareas||[]);
-        if(!d.pros)d.pros=[...new Set(d.tareas.map(function(t){return t.proyecto;}))];
+        d.tareas=des(d.tareas);
         if(d.mapa)MAPA_IMPORT=d.mapa;
         if(d.desde)DESDE_IMPORT=d.desde;
-        fijarArquitectos(d);
-        return d;
+        onLoaded(d);
       }
-      return {tareas:[],pros:[],horas:{},vacio:true};
-    });
+    }).catch(function(){});
 }
 
 // UI helpers
@@ -1423,10 +1411,10 @@ function ModalImportar({tareas,pros,onApply,onClose}){
 }
 // =================== FIN IMPORTAR HORAS ===================
 
-function App({inicial,email}){
-  const [tareas,setTareasRaw]=useState(function(){return inicial.tareas;});
-  const [pros,setPros]=useState(function(){return inicial.pros||[];});
-  const [horas,setHoras]=useState(function(){return inicial.horas||{};});
+function App(){
+  const [tareas,setTareasRaw]=useState(function(){const d=loadData();return d?d.tareas:INIT_TAREAS;});
+  const [pros,setPros]=useState(function(){const d=loadData();return d&&d.pros?d.pros:INIT_PROS;});
+  const [horas,setHoras]=useState(function(){const d=loadData();return d&&d.horas?d.horas:HORAS_DEF;});
   const [vista,setVista]=useState("proyectos");
   const [edit,setEdit]=useState(null);
   const [ntCtx,setNtCtx]=useState(null);
@@ -1439,18 +1427,27 @@ function App({inicial,email}){
   const [fEta,setFEta]=useState("Todas");
   const [saved,setSaved]=useState(false);
   const [syncMsg,setSyncMsg]=useState("");
-  const [storageSource,setStorageSource]=useState("cloud");
+  const [storageSource,setStorageSource]=useState("local");
   const [w,setW]=useState(window.innerWidth);
 
   useEffect(function(){
     const fn=function(){setW(window.innerWidth);};
     window.addEventListener("resize",fn);
+    loadCloudData(function(d){
+      if(d&&d.tareas){
+        if(d.pros)setPros(d.pros);
+        if(d.horas)setHoras(d.horas);
+        setTareasRaw(d.tareas);
+        setStorageSource("cloud");
+        try{localStorage.setItem(SK,JSON.stringify({tareas:ser(d.tareas),horas:d.horas,pros:d.pros,mapa:MAPA_IMPORT,desde:DESDE_IMPORT,ts:d.ts}));}catch(e){}
+      }
+    });
     return function(){window.removeEventListener("resize",fn);};
   },[]);
 
   const mob=w<768;
 
-  function persist(t2,p2,h2){saveData(t2||tareas,h2||horas,p2||pros).then(function(ok){if(ok){setSaved(true);setSyncMsg("");setTimeout(function(){setSaved(false);},2000);}else setSyncMsg("Error: no se pudo guardar. Revisa tu conexión o vuelve a iniciar sesión.");});}
+  function persist(t2,p2,h2){saveData(t2||tareas,h2||horas,p2||pros);setSaved(true);setTimeout(function(){setSaved(false);},2000);}
   function setTs(fn){setTareasRaw(function(prev){const next=typeof fn==="function"?fn(prev):fn;persist(next,null,null);return next;});}
   function setHrs(fn){setHoras(function(prev){const next=typeof fn==="function"?fn(prev):fn;persist(null,null,next);return next;});}
 
@@ -1479,15 +1476,19 @@ function App({inicial,email}){
   function aplicarImport(res,nuevoMapa){MAPA_IMPORT=nuevoMapa;setTs(function(prev){return aplicarImportacion(prev,res);});}
   function delT(id){setTs(function(p){return p.filter(function(t){return t.id!==id;});});setEdit(null);}
   function delP(p){const nt=tareas.filter(function(t){return t.proyecto!==p;});const np=pros.filter(function(x){return x!==p;});setTareasRaw(nt);setPros(np);persist(nt,np,null);}
+  function resetData(){saveData(INIT_TAREAS,HORAS_DEF,INIT_PROS);setTareasRaw(INIT_TAREAS);setPros(INIT_PROS);setHoras(HORAS_DEF);}
   function forzarSync(){
     setSyncMsg("Conectando...");
-    cargarNube().then(function(d){
-      if(d.vacio){setSyncMsg("Error: no se encontraron datos en Supabase");return;}
-      setPros(d.pros);setHoras(d.horas);setTareasRaw(d.tareas);
-      setStorageSource("cloud");setSyncMsg("✓ Sincronizado desde Supabase");
-    }).catch(function(e){setSyncMsg("Error: "+traducirError(e.message));});
+    fetch(SUPA_URL+"/rest/v1/control_gestion?key=eq."+SUPA_ROW+"&select=value",{headers:SUPA_H})
+      .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
+      .then(function(rows){
+        if(rows&&rows.length>0&&rows[0].value){
+          const d=JSON.parse(rows[0].value);d.tareas=des(d.tareas);if(d.mapa)MAPA_IMPORT=d.mapa;if(d.desde)DESDE_IMPORT=d.desde;
+          if(d.pros)setPros(d.pros);if(d.horas)setHoras(d.horas);setTareasRaw(d.tareas);
+          setStorageSource("cloud");setSyncMsg("✓ Sincronizado desde Supabase");
+        } else {saveData(tareas,horas,pros);setSyncMsg("✓ Datos subidos a Supabase");}
+      }).catch(function(e){setSyncMsg("Error: "+e.message);});
   }
-
 
   const mandantes=useMemo(function(){return [...new Set(tareas.map(function(t){return t.mandante;}))].sort();},[tareas]);
   const etapas=useMemo(function(){return [...new Set(tareas.map(function(t){return t.tarea.split(" ")[0]}))].sort();},[tareas]);
@@ -1525,8 +1526,7 @@ function App({inicial,email}){
           <button onClick={function(){setImpOpen(true);}} style={{background:"#10b98122",border:"1px solid #10b98166",borderRadius:5,padding:"4px 8px",color:"#10b981",cursor:"pointer",fontSize:10,fontWeight:700}}>⇪ Importar horas</button>
           <button onClick={forzarSync} style={{background:"transparent",border:"1px solid #334155",borderRadius:5,padding:"4px 8px",color:"#94a3b8",cursor:"pointer",fontSize:10}}>↺ Sync</button>
           {syncMsg&&<span style={{fontSize:9,color:syncMsg.startsWith("✓")?"#10b981":"#ef4444",fontWeight:600}}>{syncMsg}</span>}
-          {!mob&&<span style={{fontSize:10,color:"#64748b"}}>{email}</span>}
-          <button onClick={cerrarSesion} style={{background:"transparent",border:"1px solid #334155",borderRadius:5,padding:"4px 8px",color:"#94a3b8",cursor:"pointer",fontSize:10}}>Salir</button>
+          {!mob&&<button onClick={resetData} style={Object.assign({},btnS(false),{fontSize:11})}>↺ Restaurar</button>}
           {!mob&&<div style={{fontSize:10,color:"#475569"}}>{new Date().toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long"})}</div>}
         </div>
       </div>
@@ -1573,84 +1573,8 @@ function App({inicial,email}){
   );
 }
 
-function PantallaCentro({children}){
-  return <div style={{minHeight:"100vh",background:"#060f1e",color:"#e2e8f0",fontFamily:"'Segoe UI',system-ui,sans-serif",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
-    <div style={{background:"#0f172a",border:"1px solid #1e293b",borderRadius:12,padding:24,width:"100%",maxWidth:380}}>
-      <div style={{fontSize:9,color:"#6366f1",fontWeight:700,textTransform:"uppercase",letterSpacing:2}}>Badia Soffia Arquitectos</div>
-      <div style={{fontSize:19,fontWeight:800,color:"#f8fafc",marginBottom:16}}>Control de Gestión</div>
-      {children}
-    </div>
-  </div>;
-}
-function Login({onOk}){
-  const [email,setEmail]=useState("");
-  const [pass,setPass]=useState("");
-  const [err,setErr]=useState("");
-  const [busy,setBusy]=useState(false);
-  function enviar(e){
-    e.preventDefault();if(busy)return;
-    setErr("");setBusy(true);
-    iniciarSesion(email,pass).then(function(x){setBusy(false);onOk(x);}).catch(function(ex){setBusy(false);setErr(traducirError(ex.message));});
-  }
-  const lab={display:"flex",flexDirection:"column",gap:4,marginBottom:10};
-  const sp={fontSize:9,color:"#64748b",textTransform:"uppercase",letterSpacing:1};
-  return <PantallaCentro>
-    <form onSubmit={enviar}>
-      <label style={lab}><span style={sp}>Email</span><input type="email" autoComplete="username" value={email} onChange={function(e){setEmail(e.target.value);}} style={INP} required/></label>
-      <label style={lab}><span style={sp}>Contraseña</span><input type="password" autoComplete="current-password" value={pass} onChange={function(e){setPass(e.target.value);}} style={INP} required/></label>
-      {err&&<div style={{fontSize:12,color:"#ef4444",marginBottom:10}}>⚠ {err}</div>}
-      <button type="submit" disabled={busy} style={{width:"100%",background:"#6366f1",border:"none",borderRadius:6,padding:"9px 14px",color:"#fff",cursor:"pointer",fontSize:13,fontWeight:700,opacity:busy?0.6:1}}>{busy?"Ingresando…":"Ingresar"}</button>
-    </form>
-  </PantallaCentro>;
-}
-function Root(){
-  const [ses,setSes]=useState(function(){SESSION=leerSesion();return SESSION;});
-  const [datos,setDatos]=useState(null);
-  const [err,setErr]=useState("");
-  const [migrando,setMigrando]=useState(false);
-  const [migMsg,setMigMsg]=useState("");
-  const [traspasado,setTraspasado]=useState(0);
-  const [traspasoVisto,setTraspasoVisto]=useState(false);
-  useEffect(function(){
-    try{localStorage.removeItem(SK);}catch(e){}   // borra copias antiguas de datos guardadas en el navegador
-    const f=function(){setSes(null);setDatos(null);setErr("");};
-    window.addEventListener("bs-logout",f);
-    return function(){window.removeEventListener("bs-logout",f);};
-  },[]);
-  function cargar(){setErr("");setDatos(null);cargarNube().then(setDatos).catch(function(e){setErr(traducirError(e.message));});}
-  useEffect(function(){if(ses)cargar();},[ses]);
-  const btn={background:"#6366f1",border:"none",borderRadius:6,padding:"8px 14px",color:"#fff",cursor:"pointer",fontSize:12,fontWeight:600};
-  const btn2={background:"transparent",border:"1px solid #334155",borderRadius:6,padding:"8px 14px",color:"#94a3b8",cursor:"pointer",fontSize:12};
-  if(!ses)return <Login onOk={setSes}/>;
-  if(err)return <PantallaCentro>
-    <div style={{fontSize:13,color:"#ef4444",marginBottom:14}}>⚠ No se pudieron cargar los datos. {err}</div>
-    <div style={{display:"flex",gap:8}}><button onClick={cargar} style={btn}>Reintentar</button><button onClick={cerrarSesion} style={btn2}>Salir</button></div>
-  </PantallaCentro>;
-  if(!datos)return <PantallaCentro><div style={{fontSize:13,color:"#94a3b8"}}>Cargando datos…</div></PantallaCentro>;
-  if(datos.vacio&&!datos.confirmado)return <PantallaCentro>
-    <div style={{fontSize:13,color:"#f8fafc",marginBottom:8,fontWeight:700}}>Sistema nuevo sin datos todavía</div>
-    <div style={{fontSize:12,color:"#94a3b8",marginBottom:14,lineHeight:1.5}}>Trae todos los proyectos, tareas y horas desde el sistema anterior. Se hace una sola vez.</div>
-    {migMsg&&<div style={{fontSize:12,color:migMsg.startsWith("⚠")?"#ef4444":"#10b981",marginBottom:12}}>{migMsg}</div>}
-    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-      <button disabled={migrando} onClick={function(){setMigrando(true);setMigMsg("Trayendo datos…");traspasarDatos().then(function(n){setMigrando(false);setMigMsg("");setTraspasado(n);cargar();}).catch(function(e){setMigrando(false);setMigMsg("⚠ "+traducirError(e.message));});}} style={Object.assign({},btn,{background:"#10b981",opacity:migrando?0.6:1})}>{migrando?"Trayendo…":"Traer datos del sistema anterior"}</button>
-      <button onClick={function(){setDatos(Object.assign({},datos,{confirmado:true}));}} style={btn2}>Empezar vacío</button>
-      <button onClick={cerrarSesion} style={btn2}>Salir</button>
-    </div>
-  </PantallaCentro>;
-  if(traspasado&&!traspasoVisto)return <PantallaCentro>
-    <div style={{fontSize:13,color:"#10b981",marginBottom:8,fontWeight:700}}>✓ Datos traídos: {traspasado} tareas</div>
-    <div style={{fontSize:12,color:"#94a3b8",marginBottom:14,lineHeight:1.5}}>Ya están guardados y protegidos en el sistema nuevo. Opcional: vaciar el sistema anterior, para que nadie pueda leer los datos por el link antiguo. Si todavía usas la app de Registro de horas, no lo vacíes aún.</div>
-    {migMsg&&<div style={{fontSize:12,color:migMsg.startsWith("⚠")?"#ef4444":"#10b981",marginBottom:12}}>{migMsg}</div>}
-    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-      <button onClick={function(){setTraspasoVisto(true);}} style={btn}>Entrar a la app</button>
-      <button onClick={function(){setMigMsg("Vaciando…");vaciarAnterior().then(function(){setMigMsg("✓ Sistema anterior vaciado");}).catch(function(e){setMigMsg("⚠ "+traducirError(e.message));});}} style={btn2}>Vaciar sistema anterior</button>
-    </div>
-  </PantallaCentro>;
-  return <App inicial={datos} email={ses.email}/>;
-}
-
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<Root />);
+    root.render(<App />);
   </script>
 </body>
 </html>
