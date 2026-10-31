@@ -78,9 +78,35 @@ const INIT_TAREAS = RAW.map(function(r){
 const INIT_PROS = [...new Set(INIT_TAREAS.map(function(t){return t.proyecto;}))];
 
 // Storage — Supabase + localStorage fallback
-const SUPA_URL = "https://jhbhhyeysrprvvurylgv.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoYmhoeWV5c3JwcnZ2dXJ5bGd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mzc3MDEsImV4cCI6MjA5NTMxMzcwMX0.t-Butq0BzSoy1OVIqox_WON55SW5eddcdswFBorPEHE";
-const SUPA_H = {"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY};
+// Proyecto Supabase de la oficina (cuenta nueva) — datos protegidos con inicio de sesión
+const SUPA_URL = "https://xfwiqhyoiebxdisrpdrq.supabase.co";
+const SUPA_KEY = "sb_publishable_1vIfVtZRqAFVhXJ4UuHZgQ_G4U76cjW";
+// Proyecto anterior (solo para traspasar los datos una vez)
+const OLD_URL = "https://jhbhhyeysrprvvurylgv.supabase.co";
+const OLD_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoYmhoeWV5c3JwcnZ2dXJ5bGd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mzc3MDEsImV4cCI6MjA5NTMxMzcwMX0.t-Butq0BzSoy1OVIqox_WON55SW5eddcdswFBorPEHE";
+const OLD_H = {"Content-Type":"application/json","apikey":OLD_KEY,"Authorization":"Bearer "+OLD_KEY};
+// Copia los datos del proyecto anterior al nuevo (una sola vez)
+function traspasarDatos(){
+  return fetch(OLD_URL+"/rest/v1/control_gestion?key=eq."+SUPA_ROW+"&select=value",{headers:OLD_H})
+    .then(function(r){if(!r.ok)throw new Error("No se pudo leer el sistema anterior ("+r.status+").");return r.json();})
+    .then(function(rows){
+      if(!rows||!rows.length||!rows[0].value)throw new Error("El sistema anterior no tiene datos.");
+      const v=typeof rows[0].value==="string"?rows[0].value:JSON.stringify(rows[0].value);
+      const d=JSON.parse(v);
+      if(!d.tareas||!d.tareas.length)throw new Error("El sistema anterior no tiene tareas.");
+      return supaFetch("/rest/v1/control_gestion",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify({key:SUPA_ROW,value:v})})
+        .then(function(r){
+          if(!r.ok)return r.text().then(function(t){throw new Error("No se pudo guardar en el sistema nuevo ("+r.status+"). "+t.slice(0,140));});
+          return d.tareas.length;
+        });
+    });
+}
+// Vacía los datos del proyecto anterior (para que nadie pueda leerlos por esa vía)
+function vaciarAnterior(){
+  return fetch(OLD_URL+"/rest/v1/control_gestion?key=eq."+SUPA_ROW,{method:"PATCH",headers:Object.assign({"Prefer":"return=minimal"},OLD_H),
+    body:JSON.stringify({value:JSON.stringify({tareas:[],pros:[],horas:{},movido:"Datos trasladados al sistema nuevo",ts:new Date().toISOString()})})})
+    .then(function(r){if(!r.ok)throw new Error("No se pudo vaciar ("+r.status+").");return true;});
+}
 const SUPA_ROW = "bs_control_v1";
 
 function ser(tareas){
@@ -1581,6 +1607,10 @@ function Root(){
   const [ses,setSes]=useState(function(){SESSION=leerSesion();return SESSION;});
   const [datos,setDatos]=useState(null);
   const [err,setErr]=useState("");
+  const [migrando,setMigrando]=useState(false);
+  const [migMsg,setMigMsg]=useState("");
+  const [traspasado,setTraspasado]=useState(0);
+  const [traspasoVisto,setTraspasoVisto]=useState(false);
   useEffect(function(){
     try{localStorage.removeItem(SK);}catch(e){}   // borra copias antiguas de datos guardadas en el navegador
     const f=function(){setSes(null);setDatos(null);setErr("");};
@@ -1598,9 +1628,23 @@ function Root(){
   </PantallaCentro>;
   if(!datos)return <PantallaCentro><div style={{fontSize:13,color:"#94a3b8"}}>Cargando datos…</div></PantallaCentro>;
   if(datos.vacio&&!datos.confirmado)return <PantallaCentro>
-    <div style={{fontSize:13,color:"#f59e0b",marginBottom:8,fontWeight:700}}>No se encontraron datos guardados.</div>
-    <div style={{fontSize:12,color:"#94a3b8",marginBottom:14,lineHeight:1.5}}>Si ya tenías proyectos cargados, no sigas: puede ser un problema de permisos en Supabase. Pulsa Reintentar.</div>
-    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button onClick={cargar} style={btn}>Reintentar</button><button onClick={function(){setDatos(Object.assign({},datos,{confirmado:true}));}} style={btn2}>Empezar vacío</button><button onClick={cerrarSesion} style={btn2}>Salir</button></div>
+    <div style={{fontSize:13,color:"#f8fafc",marginBottom:8,fontWeight:700}}>Sistema nuevo sin datos todavía</div>
+    <div style={{fontSize:12,color:"#94a3b8",marginBottom:14,lineHeight:1.5}}>Trae todos los proyectos, tareas y horas desde el sistema anterior. Se hace una sola vez.</div>
+    {migMsg&&<div style={{fontSize:12,color:migMsg.startsWith("⚠")?"#ef4444":"#10b981",marginBottom:12}}>{migMsg}</div>}
+    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+      <button disabled={migrando} onClick={function(){setMigrando(true);setMigMsg("Trayendo datos…");traspasarDatos().then(function(n){setMigrando(false);setMigMsg("");setTraspasado(n);cargar();}).catch(function(e){setMigrando(false);setMigMsg("⚠ "+traducirError(e.message));});}} style={Object.assign({},btn,{background:"#10b981",opacity:migrando?0.6:1})}>{migrando?"Trayendo…":"Traer datos del sistema anterior"}</button>
+      <button onClick={function(){setDatos(Object.assign({},datos,{confirmado:true}));}} style={btn2}>Empezar vacío</button>
+      <button onClick={cerrarSesion} style={btn2}>Salir</button>
+    </div>
+  </PantallaCentro>;
+  if(traspasado&&!traspasoVisto)return <PantallaCentro>
+    <div style={{fontSize:13,color:"#10b981",marginBottom:8,fontWeight:700}}>✓ Datos traídos: {traspasado} tareas</div>
+    <div style={{fontSize:12,color:"#94a3b8",marginBottom:14,lineHeight:1.5}}>Ya están guardados y protegidos en el sistema nuevo. Opcional: vaciar el sistema anterior, para que nadie pueda leer los datos por el link antiguo. Si todavía usas la app de Registro de horas, no lo vacíes aún.</div>
+    {migMsg&&<div style={{fontSize:12,color:migMsg.startsWith("⚠")?"#ef4444":"#10b981",marginBottom:12}}>{migMsg}</div>}
+    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+      <button onClick={function(){setTraspasoVisto(true);}} style={btn}>Entrar a la app</button>
+      <button onClick={function(){setMigMsg("Vaciando…");vaciarAnterior().then(function(){setMigMsg("✓ Sistema anterior vaciado");}).catch(function(e){setMigMsg("⚠ "+traducirError(e.message));});}} style={btn2}>Vaciar sistema anterior</button>
+    </div>
   </PantallaCentro>;
   return <App inicial={datos} email={ses.email}/>;
 }
